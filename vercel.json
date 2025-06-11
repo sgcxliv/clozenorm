@@ -2,5 +2,10 @@
   "buildCommand": null,
   "outputDirectory": ".",
   "devCommand": null,
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "functions": {
+    "api/submit-results.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
