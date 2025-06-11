@@ -267,6 +267,31 @@
         <button id="practiceSubmit">Submit</button>
     </div>
     
+    <!-- Ready to Begin Screen -->
+    <div id="readyArea" class="container hidden">
+        <h2>Ready to Begin</h2>
+        <div class="success-message">
+            Great job on the practice trial!
+        </div>
+        
+        <p>You're now ready to start the actual experiment.</p>
+        
+        <div class="instructions">
+            <p><strong>Remember the rules:</strong></p>
+            <ul>
+                <li>Enter only single words (no phrases or spaces)</li>
+                <li>No punctuation, numbers, or special characters</li>
+                <li>Make sure your spelling is correct</li>
+                <li>Don't overuse the same word</li>
+            </ul>
+        </div>
+        
+        <p>In the main experiment, you'll complete all the sentence completion tasks.</p>
+        <p>Take your time and give your best answer for each sentence.</p>
+        
+        <button id="beginExperimentButton">Begin Actual Experiment</button>
+    </div>
+    
     <!-- Experiment Area -->
     <div id="experimentArea" class="container hidden">
         <h2>Main Experiment</h2>
@@ -329,6 +354,7 @@
         const errorMessage_elem = document.getElementById("errorMessage");
         const instructionsArea = document.getElementById("instructionsArea");
         const practiceArea = document.getElementById("practiceArea");
+        const readyArea = document.getElementById("readyArea");
         const experimentArea = document.getElementById("experimentArea");
         const finalScreen = document.getElementById("finalScreen");
         
@@ -337,6 +363,7 @@
         const practiceInput = document.getElementById("practiceInput");
         const practiceSubmit = document.getElementById("practiceSubmit");
         const practiceErrorMsg = document.getElementById("practiceErrorMsg");
+        const beginExperimentButton = document.getElementById("beginExperimentButton");
         
         const sentenceText = document.getElementById("sentenceText");
         const responseInput = document.getElementById("responseInput");
@@ -351,6 +378,7 @@
         startButton.addEventListener("click", startExperiment);
         practiceButton.addEventListener("click", startPractice);
         practiceSubmit.addEventListener("click", submitPractice);
+        beginExperimentButton.addEventListener("click", loadExperiment);
         submitButton.addEventListener("click", submitResponse);
         downloadLink.addEventListener("click", generateCSV);
         
@@ -557,7 +585,7 @@
             if (validateResponse(response)) {
                 practiceErrorMsg.classList.add("hidden");
                 practiceArea.classList.add("hidden");
-                loadExperiment();
+                readyArea.classList.remove("hidden");
             } else {
                 practiceErrorMsg.textContent = errorMessage;
                 practiceErrorMsg.classList.remove("hidden");
@@ -565,6 +593,7 @@
         }
         
         function loadExperiment() {
+            readyArea.classList.add("hidden");
             experimentArea.classList.remove("hidden");
             startTime = new Date();
             loadNextSentence();
@@ -635,38 +664,21 @@
         function validateResponse(response) {
             const word = response.trim().toLowerCase();
             
-            if (!word || word === "") {
-                errorMessage = "Warning! You cannot submit a blank response. Please enter a word.";
+            // Check if word has been used too many times first (special case)
+            const currentCount = wordCounter[word] || 0;
+            if (currentCount >= 22) {
+                errorMessage = "Warning: Word used too many times. Over reusing words may disqualify you from the experiment payment.";
                 return false;
             }
             
-            if (/\s/.test(word)) {
-                errorMessage = "Warning! Illegal input. Please enter a single word only (no spaces).";
+            // All other validation issues get the general message
+            if (!word || word === "" || /\s/.test(word) || /\d/.test(word) || /[^\w]|_/.test(word) || !wordBank.has(word)) {
+                errorMessage = "Warning: Invalid answer. Make sure your word is spelled correctly, includes no punctuation, numbers, and is not empty.";
                 return false;
             }
             
-            if (/\d/.test(word)) {
-                errorMessage = "Warning! Illegal characters input. Please enter a word without numbers.";
-                return false;
-            }
-            
-            if (/[^\w]|_/.test(word)) {
-                errorMessage = "Warning! Illegal characters input. Please enter a word without punctuation or special characters.";
-                return false;
-            }
-            
-            if (!wordBank.has(word)) {
-                errorMessage = "Warning! Word not recognized. Please make sure the word is spelled correctly.";
-                return false;
-            }
-            
-            wordCounter[word] = (wordCounter[word] || 0) + 1;
-            if (wordCounter[word] > 22) {
-                errorMessage = "Answer has been used too frequently. Please input a different answer. You may not be paid if you are getting this message as we have suspicion that you are overusing a word as an answer.";
-                wordCounter[word]--;
-                return false;
-            }
-            
+            // If we get here, the word is valid - increment counter
+            wordCounter[word] = currentCount + 1;
             return true;
         }
         
