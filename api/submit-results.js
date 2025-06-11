@@ -138,20 +138,6 @@ function formatDataAsCSV(data) {
     csv += `# Most Frequent Word,"${mostFrequentWord}",${maxCount}\n`;
   }
   
-  // Add response time statistics if available
-  if (data.results.length > 0 && data.results[0].response_time_ms) {
-    const responseTimes = data.results.map(r => r.response_time_ms).filter(rt => rt != null);
-    if (responseTimes.length > 0) {
-      const avgResponseTime = responseTimes.reduce((sum, rt) => sum + rt, 0) / responseTimes.length;
-      const minResponseTime = Math.min(...responseTimes);
-      const maxResponseTime = Math.max(...responseTimes);
-      
-      csv += `# Average Response Time (ms),${Math.round(avgResponseTime)}\n`;
-      csv += `# Min Response Time (ms),${minResponseTime}\n`;
-      csv += `# Max Response Time (ms),${maxResponseTime}\n`;
-    }
-  }
-  
   // Add word frequency breakdown
   if (data.word_frequencies && Object.keys(data.word_frequencies).length > 0) {
     csv += '\n# WORD FREQUENCIES\n';
