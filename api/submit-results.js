@@ -53,12 +53,12 @@ export default async function handler(req) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `cloze_results_${timestamp}_${data.participant_id}_${data.selected_list || 'unknown'}.csv`;
     
-    // Convert to CSV format
+    // Convert to CSV format - only including the essential fields
     const csvContent = formatDataAsCSV(data);
     
     // Store in Vercel Blob Storage
     const blob = await put(filename, csvContent, {
-      access: 'public', // Make it public for easier debugging
+      access: 'public', // Public for easier debugging/access
       contentType: 'text/csv'
     });
 
@@ -97,22 +97,24 @@ export default async function handler(req) {
 function formatDataAsCSV(data) {
   let csv = '';
   
-  // Add metadata header (similar to PCIbex format)
+  // Add minimal metadata header
   csv += `# Cloze Norming Study Results\n`;
-  csv += `# Generated on ${new Date().toUTCString()}\n`;
   csv += `# Participant ID: ${data.participant_id}\n`;
   csv += `# Selected List: ${data.selected_list || 'unknown'}\n`;
-  csv += `# Session Start: ${data.session_start || 'unknown'}\n`;
-  csv += `# Session End: ${data.session_end || new Date().toISOString()}\n`;
   csv += `# Total Trials: ${data.results.length}\n`;
-  csv += `# Browser: ${data.browser_info?.user_agent || 'unknown'}\n`;
-  csv += `# Screen: ${data.browser_info?.screen_width || 'unknown'}x${data.browser_info?.screen_height || 'unknown'}\n`;
-  csv += `# Language: ${data.browser_info?.language || 'unknown'}\n`;
   csv += `#\n`;
   
   if (data.results && data.results.length > 0) {
-    // Get headers from first result object
-    const headers = Object.keys(data.results[0]);
+    // Only include the essential fields
+    const essentialFields = [
+      'participant_id', 'word', 'sentence', 'Code', 
+      'OriginalID', 'Item', 'Cloze', 'RegionPlacement', 
+      'OriginalList', 'ListNumber', 'selected_list'
+    ];
+    
+    // Filter headers to only include essential fields
+    const headers = Object.keys(data.results[0])
+      .filter(header => essentialFields.includes(header));
     
     // Add CSV headers
     csv += headers.join(',') + '\n';
@@ -139,43 +141,6 @@ function formatDataAsCSV(data) {
       });
       
       csv += row.join(',') + '\n';
-    });
-  }
-  
-  // Add summary statistics
-  csv += '\n# SUMMARY STATISTICS\n';
-  csv += `# Total Trials,${data.results.length}\n`;
-  
-  if (data.word_frequencies) {
-    csv += `# Unique Words Used,${Object.keys(data.word_frequencies).length}\n`;
-    
-    // Calculate total word usage
-    const totalWords = Object.values(data.word_frequencies).reduce((sum, count) => sum + count, 0);
-    csv += `# Total Word Usage,${totalWords}\n`;
-    
-    // Find most frequent word
-    let mostFrequentWord = '';
-    let maxCount = 0;
-    for (const [word, count] of Object.entries(data.word_frequencies)) {
-      if (count > maxCount) {
-        maxCount = count;
-        mostFrequentWord = word;
-      }
-    }
-    csv += `# Most Frequent Word,"${mostFrequentWord}",${maxCount}\n`;
-  }
-  
-  // Add word frequency breakdown
-  if (data.word_frequencies && Object.keys(data.word_frequencies).length > 0) {
-    csv += '\n# WORD FREQUENCIES\n';
-    csv += '# Word,Usage_Count\n';
-    
-    // Sort by frequency (descending)
-    const sortedWords = Object.entries(data.word_frequencies)
-      .sort(([,a], [,b]) => b - a);
-    
-    sortedWords.forEach(([word, count]) => {
-      csv += `# "${word}",${count}\n`;
     });
   }
   
