@@ -335,7 +335,7 @@
         // Configuration - exactly matching your PCIbex setup
         const csvFiles = ["List1.csv", "List2.csv", "List3.csv", "List4.csv", "List5.csv", "List6.csv", "List7.csv", "List8.csv", "List9.csv"];
         const wordBankFile = "wordbank.csv";
-        const RESULTS_ENDPOINT = "submit_results.php"; // Change this to your server endpoint
+        const RESULTS_ENDPOINT = "/api/submit-results"; // Vercel API route
         
         // Variables to store experiment state
         let currentSentenceIndex = 0;
