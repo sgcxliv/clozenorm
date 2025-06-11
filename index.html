@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloze Norming Study</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1, h2, h3 {
+            color: #333;
+        }
+        
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        
+        #experimentArea, #instructionsArea, #finalScreen {
+            display: none;
+        }
+        
+        .input-area {
+            margin: 30px 0;
+        }
+        
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .error-msg {
+            color: red;
+            font-weight: bold;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .progress {
+            margin: 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        #downloadLink {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        
+        #downloadLink:hover {
+            background-color: #0b7dda;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #loadingStatus {
+            margin-top: 15px;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcomeArea" class="container">
+        <h1>Welcome to our Cloze Norming Study!</h1>
+        <p>In this experiment, you will read sentences and guess the word that comes next.</p>
+        
+        <div class="input-area">
+            <label for="participantId">Please enter your ID:</label><br>
+            <input type="text" id="participantId" placeholder="Your ID">
+        </div>
+        
+        <div id="loadingArea" style="display: none;">
+            <p>Loading experiment resources...</p>
+            <div class="loading-spinner"></div>
+            <div id="loadingStatus"></div>
+        </div>
+        
+        <button id="startButton">Begin Experiment</button>
+    </div>
+    
+    <!-- Instructions Screen -->
+    <div id="instructionsArea" class="container">
+        <h2>Instructions</h2>
+        <p>In this experiment, you will:</p>
+        <ul style="text-align: left; display: inline-block;">
+            <li>Read partial sentences with a blank at the end</li>
+            <li>Type the word you think most likely completes the sentence</li>
+            <li>Your answer must be from our word list</li>
+            <li>Submit your answer using the Submit button</li>
+        </ul>
+        <p><b>Important Rules</b>:</p>
+        <ul style="text-align: left; display: inline-block;">
+            <li>Please enter only single words (no phrases)</li>
+            <li>Do not use punctuation or numbers</li>
+            <li>Make sure your spelling is correct</li>
+            <li>Do not overuse the same word (max 22 times)</li>
+        </ul>
+        <p>Keep in mind that you may not be guessing the last word of the sentence.</p>
+        <p>Let's try a practice example first.</p>
+        
+        <button id="practiceButton">Start Practice</button>
+    </div>
+    
+    <!-- Practice Area -->
+    <div id="practiceArea" class="container" style="display: none;">
+        <h2>Practice Trial</h2>
+        <p>The Atlantic Ocean is very ___</p>
+        
+        <div class="input-area">
+            <input type="text" id="practiceInput" placeholder="Type your answer here">
+        </div>
+        
+        <div class="error-msg" id="practiceErrorMsg"></div>
+        
+        <button id="practiceSubmit">Submit</button>
+    </div>
+    
+    <!-- Experiment Area -->
+    <div id="experimentArea" class="container">
+        <h2>Experiment</h2>
+        <div class="progress">
+            <span id="progressText">Question 1 of 216</span>
+        </div>
+        
+        <p id="sentenceText">Loading sentences...</p>
+        
+        <div class="input-area">
+            <input type="text" id="responseInput" placeholder="Type your answer here">
+        </div>
+        
+        <div class="error-msg" id="responseErrorMsg"></div>
+        
+        <button id="submitButton">Submit</button>
+    </div>
+    
+    <!-- Final Screen -->
+    <div id="finalScreen" class="container">
+        <h2>Thank you for participating!</h2>
+        <p>The experiment is now complete.</p>
+        <div id="wordStats"></div>
+        <p>Your data has been recorded.</p>
+        <a id="downloadLink" href="#" download="results.csv">Download Results</a>
+        <p><a id="prolificLink" href="https://app.prolific.com/submissions/complete?cc=C4A8KZK5">Click here to validate your participation on Prolific</a></p>
+    </div>
+
+    <script>
+        // Configuration - these exactly match your list file names
+        const csvFiles = ["List1.csv", "List2.csv", "List3.csv", "List4.csv", "List5.csv", "List6.csv", "List7.csv", "List8.csv", "List9.csv"];
+        const wordBankFile = "wordbank.csv";
+        
+        // Variables to store experiment state
+        let currentSentenceIndex = 0;
+        let participantId = "";
+        let experimentResults = [];
+        let selectedList = "";
+        let sentenceData = [];
+        let wordBank = new Set();
+        let wordCounter = {};
+        let errorMessage = "";
+        
+        // DOM Elements
+        const welcomeArea = document.getElementById("welcomeArea");
+        const loadingArea = document.getElementById("loadingArea");
+        const loadingStatus = document.getElementById("loadingStatus");
+        const instructionsArea = document.getElementById("instructionsArea");
+        const practiceArea = document.getElementById("practiceArea");
+        const experimentArea = document.getElementById("experimentArea");
+        const finalScreen = document.getElementById("finalScreen");
+        
+        const startButton = document.getElementById("startButton");
+        const practiceButton = document.getElementById("practiceButton");
+        const practiceInput = document.getElementById("practiceInput");
+        const practiceSubmit = document.getElementById("practiceSubmit");
+        const practiceErrorMsg = document.getElementById("practiceErrorMsg");
+        
+        const sentenceText = document.getElementById("sentenceText");
+        const responseInput = document.getElementById("responseInput");
+        const submitButton = document.getElementById("submitButton");
+        const responseErrorMsg = document.getElementById("responseErrorMsg");
+        const progressText = document.getElementById("progressText");
+        const downloadLink = document.getElementById("downloadLink");
+        const wordStats = document.getElementById("wordStats");
+        
+        // Event Listeners
+        startButton.addEventListener("click", startExperiment);
+        practiceButton.addEventListener("click", startPractice);
+        practiceSubmit.addEventListener("click", submitPractice);
+        submitButton.addEventListener("click", submitResponse);
+        downloadLink.addEventListener("click", generateCSV);
+        
+        // Functions
+        async function startExperiment() {
+            participantId = document.getElementById("participantId").value.trim();
+            
+            if (!participantId) {
+                alert("Please enter your ID to continue.");
+                return;
+            }
+            
+            // Show loading screen
+            welcomeArea.style.display = "none";
+            loadingArea.style.display = "block";
+            
+            try {
+                // Select a random list
+                selectedList = csvFiles[Math.floor(Math.random() * csvFiles.length)];
+                
+                // Load wordbank
+                loadingStatus.textContent = "Loading word bank...";
+                await loadWordBank();
+                
+                // Load sentence data
+                loadingStatus.textContent = "Loading sentence data...";
+                await loadSentenceData(selectedList);
+                
+                // Move to instructions
+                loadingArea.style.display = "none";
+                instructionsArea.style.display = "block";
+            } catch (error) {
+                console.error("Error loading experiment data:", error);
+                loadingStatus.textContent = "Error loading data: " + error.message;
+            }
+        }
+        
+        async function loadWordBank() {
+            try {
+                const response = await fetch(wordBankFile);
+                if (!response.ok) {
+                    throw new Error(`Failed to load wordbank: ${response.status}`);
+                }
+                
+                const data = await response.text();
+                const lines = data.split('\n');
+                
+                // Determine which column contains the words
+                const header = lines[0].toLowerCase();
+                const wordColIndex = header.split(',').findIndex(col => 
+                    col.trim() === 'word' || col.trim() === 'words'
+                );
+                
+                // Default to first column if no column named "word" is found
+                const columnIndex = wordColIndex >= 0 ? wordColIndex : 0;
+                
+                // Process each line (skip header)
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim()) {
+                        const columns = lines[i].split(',');
+                        if (columns.length > columnIndex) {
+                            const word = columns[columnIndex].trim().toLowerCase();
+                            if (word) {
+                                wordBank.add(word);
+                            }
+                        }
+                    }
+                }
+                
+                console.log(`Loaded ${wordBank.size} words into wordbank`);
+                return true;
+            } catch (error) {
+                console.error("Error loading wordbank:", error);
+                throw error;
+            }
+        }
+        
+        async function loadSentenceData(listFile) {
+            try {
+                const response = await fetch(listFile);
+                if (!response.ok) {
+                    throw new Error(`Failed to load sentence data: ${response.status}`);
+                }
+                
+                const data = await response.text();
+                const lines = data.split('\n');
+                
+                // Parse headers
+                const headers = lines[0].split(',');
+                
+                // Find column indexes - uses exact names from your specification
+                const sentenceIdx = headers.findIndex(h => h.trim() === 'Sentence');
+                const codeIdx = headers.findIndex(h => h.trim() === 'code');
+                const clozeIdx = headers.findIndex(h => h.trim() === 'Cloze');
+                const regionIdx = headers.findIndex(h => h.trim() === 'regionplacement');
+                
+                // Parse sentences (skip header)
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim()) {
+                        // Handle CSV parsing properly (respecting quotes)
+                        let columns = parseCSVLine(lines[i]);
+                        
+                        if (columns.length > Math.max(sentenceIdx, codeIdx, clozeIdx, regionIdx)) {
+                            sentenceData.push({
+                                Sentence: columns[sentenceIdx].trim(),
+                                code: columns[codeIdx].trim(),
+                                Cloze: columns[clozeIdx].trim(),
+                                regionplacement: columns[regionIdx].trim()
+                            });
+                        }
+                    }
+                }
+                
+                // Randomize the order
+                sentenceData = shuffleArray(sentenceData);
+                
+                console.log(`Loaded ${sentenceData.length} sentences from ${listFile}`);
+                return true;
+            } catch (error) {
+                console.error("Error loading sentence data:", error);
+                throw error;
+            }
+        }
+        
+        // Helper function to parse CSV lines properly (handling quotes)
+        function parseCSVLine(line) {
+            const result = [];
+            let currentValue = "";
+            let insideQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    insideQuotes = !insideQuotes;
+                } else if (char === ',' && !insideQuotes) {
+                    result.push(currentValue);
+                    currentValue = "";
+                } else {
+                    currentValue += char;
+                }
+            }
+            
+            // Add the last value
+            result.push(currentValue);
+            return result;
+        }
+        
+        function startPractice() {
+            instructionsArea.style.display = "none";
+            practiceArea.style.display = "block";
+        }
+        
+        function submitPractice() {
+            const response = practiceInput.value;
+            
+            if (validateResponse(response)) {
+                practiceErrorMsg.style.display = "none";
+                practiceArea.style.display = "none";
+                
+                // Start the actual experiment
+                loadExperiment();
+            } else {
+                practiceErrorMsg.textContent = errorMessage;
+                practiceErrorMsg.style.display = "block";
+            }
+        }
+        
+        function loadExperiment() {
+            experimentArea.style.display = "block";
+            loadNextSentence();
+        }
+        
+        function loadNextSentence() {
+            if (currentSentenceIndex < sentenceData.length) {
+                const currentItem = sentenceData[currentSentenceIndex];
+                sentenceText.textContent = currentItem.Sentence + " ___";
+                progressText.textContent = `Question ${currentSentenceIndex + 1} of ${sentenceData.length}`;
+                responseInput.value = "";
+                responseErrorMsg.style.display = "none";
+                
+                // Auto-focus on the input field
+                responseInput.focus();
+            } else {
+                // End of experiment
+                experimentArea.style.display = "none";
+                showFinalScreen();
+            }
+        }
+        
+        function submitResponse() {
+            const response = responseInput.value;
+            
+            if (validateResponse(response)) {
+                responseErrorMsg.style.display = "none";
+                
+                const currentItem = sentenceData[currentSentenceIndex];
+                
+                // Record the response
+                experimentResults.push({
+                    participantId: participantId,
+                    regionplacement: currentItem.regionplacement,
+                    itemID: currentItem.code,
+                    condition: currentItem.Cloze,
+                    list: selectedList,
+                    sentence: currentItem.Sentence,
+                    response: response.trim().toLowerCase(),
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Save results to localStorage as backup
+                saveResultsToLocalStorage();
+                
+                // Move to next sentence
+                currentSentenceIndex++;
+                loadNextSentence();
+            } else {
+                responseErrorMsg.textContent = errorMessage;
+                responseErrorMsg.style.display = "block";
+            }
+        }
+        
+        // Allow pressing Enter to submit response
+        responseInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                submitResponse();
+            }
+        });
+        
+        // Allow pressing Enter to submit practice
+        practiceInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                submitPractice();
+            }
+        });
+        
+        function validateResponse(response) {
+            // Remove any leading/trailing spaces
+            const word = response.trim().toLowerCase();
+            
+            // Check for blank or whitespace-only inputs
+            if (!word || word === "") {
+                errorMessage = "Warning! You cannot submit a blank response or spaces. Please enter a word.";
+                return false;
+            }
+            
+            // Check for multiple words (spaces)
+            if (/\s/.test(word)) {
+                errorMessage = "Warning! Illegal input. Please enter a single word only (no spaces).";
+                return false;
+            }
+            
+            // Check for numbers
+            if (/\d/.test(word)) {
+                errorMessage = "Warning! Illegal characters input. Please enter a word without numbers.";
+                return false;
+            }
+            
+            // Check for punctuation or special characters
+            if (/[^\w]|_/.test(word)) {
+                errorMessage = "Warning! Illegal characters input. Please enter a word without punctuation or special characters.";
+                return false;
+            }
+            
+            // Check if word exists in wordbank
+            if (!wordBank.has(word)) {
+                errorMessage = "Warning! Word not recognized. Please make sure the word is spelled correctly.";
+                return false;
+            }
+            
+            // Check if word has been used too many times (>22)
+            wordCounter[word] = (wordCounter[word] || 0) + 1;
+            if (wordCounter[word] > 22) {
+                errorMessage = "Answer has been used too frequently. Please input a different answer. You may not be paid if you are getting this message as we have suspicion that you are overusing a word as an answer.";
+                wordCounter[word]--; // Decrement since we're not accepting this usage
+                return false;
+            }
+            
+            // All checks passed
+            return true;
+        }
+        
+        function showFinalScreen() {
+            // Find the most frequently used word
+            let maxWord = "";
+            let maxCount = 0;
+            let totalResponses = 0;
+            
+            for (const [word, count] of Object.entries(wordCounter)) {
+                totalResponses += count;
+                if (count > maxCount) {
+                    maxCount = count;
+                    maxWord = word;
+                }
+            }
+            
+            // Display word usage statistics
+            wordStats.innerHTML = `<p><small>Words used: ${Object.keys(wordCounter).length} unique words in ${totalResponses} responses<br>
+            Most frequent: "${maxWord}" (${maxCount} times)</small></p>`;
+            
+            // Show final screen
+            finalScreen.style.display = "block";
+        }
+        
+        function saveResultsToLocalStorage() {
+            try {
+                localStorage.setItem(`cloze_results_${participantId}`, JSON.stringify(experimentResults));
+            } catch (e) {
+                console.warn("Could not save to localStorage:", e);
+            }
+        }
+        
+        function generateCSV(event) {
+            if (experimentResults.length === 0) {
+                alert("No data to download.");
+                event.preventDefault();
+                return;
+            }
+            
+            // Create CSV content
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Add headers
+            csvContent += "participant_id,regionplacement,item_id,condition,list,sentence,response,timestamp\n";
+            
+            // Add data rows
+            experimentResults.forEach(result => {
+                const row = [
+                    result.participantId,
+                    result.regionplacement,
+                    result.itemID,
+                    result.condition,
+                    result.list,
+                    `"${result.sentence.replace(/"/g, '""')}"`, // Escape quotes for CSV
+                    result.response,
+                    result.timestamp
+                ].join(",");
+                csvContent += row + "\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            downloadLink.href = encodedUri;
+            downloadLink.download = `cloze_results_${participantId}_${new Date().toISOString().slice(0,10)}.csv`;
+        }
+        
+        // Utility functions
+        function shuffleArray(array) {
+            // Fisher-Yates shuffle algorithm
+            const newArray = [...array]; // Create a copy to avoid modifying the original
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Check if there are saved results in localStorage (e.g., if browser was closed)
+        window.addEventListener('load', function() {
+            // Check for session recovery
+            const urlParams = new URLSearchParams(window.location.search);
+            const recoveryId = urlParams.get('recover');
+            
+            if (recoveryId) {
+                try {
+                    const savedResults = localStorage.getItem(`cloze_results_${recoveryId}`);
+                    if (savedResults) {
+                        const shouldRecover = confirm("We found a previous session for this ID. Would you like to continue where you left off?");
+                        if (shouldRecover) {
+                            participantId = recoveryId;
+                            document.getElementById("participantId").value = recoveryId;
+                            experimentResults = JSON.parse(savedResults);
+                            currentSentenceIndex = experimentResults.length;
+                            
+                            // Count words used so far
+                            experimentResults.forEach(result => {
+                                const word = result.response.toLowerCase();
+                                wordCounter[word] = (wordCounter[word] || 0) + 1;
+                            });
+                            
+                            // Continue experiment
+                            startExperiment();
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Could not recover session:", e);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
