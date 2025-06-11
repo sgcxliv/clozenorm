@@ -530,15 +530,20 @@
                 const headers = parseCSVLine(lines[0]);
                 console.log("Headers found:", headers);
                 
-                // Find column indexes
-                const sentenceIdx = headers.findIndex(h => h.trim() === 'Sentence');
+                // Find column indexes for all required fields
+                const sentenceIdx = headers.findIndex(h => h.trim().toLowerCase() === 'sentence');
                 const codeIdx = headers.findIndex(h => h.trim() === 'Code');
+                const originalIdIdx = headers.findIndex(h => h.trim() === 'OriginalID');
+                const itemIdx = headers.findIndex(h => h.trim() === 'Item');
                 const clozeIdx = headers.findIndex(h => h.trim() === 'Cloze');
                 const regionIdx = headers.findIndex(h => h.trim() === 'RegionPlacement');
-                const itemIdx = headers.findIndex(h => h.trim() === 'Item');
+                const originalListIdx = headers.findIndex(h => h.trim() === 'OriginalList');
                 const listNumIdx = headers.findIndex(h => h.trim() === 'ListNumber');
                 
-                console.log("Column indexes:", {sentenceIdx, codeIdx, clozeIdx, regionIdx, itemIdx, listNumIdx});
+                console.log("Column indexes:", {
+                    sentenceIdx, codeIdx, originalIdIdx, itemIdx, 
+                    clozeIdx, regionIdx, originalListIdx, listNumIdx
+                });
                 
                 if (sentenceIdx === -1 || codeIdx === -1) {
                     throw new Error("Required columns (Sentence, Code) not found in CSV");
@@ -553,9 +558,11 @@
                             sentenceData.push({
                                 Sentence: columns[sentenceIdx] ? columns[sentenceIdx].trim() : '',
                                 Code: columns[codeIdx] ? columns[codeIdx].trim() : '',
+                                OriginalID: originalIdIdx >= 0 && columns[originalIdIdx] ? columns[originalIdIdx].trim() : '',
+                                Item: itemIdx >= 0 && columns[itemIdx] ? columns[itemIdx].trim() : '',
                                 Cloze: clozeIdx >= 0 && columns[clozeIdx] ? columns[clozeIdx].trim() : '',
                                 RegionPlacement: regionIdx >= 0 && columns[regionIdx] ? columns[regionIdx].trim() : '',
-                                Item: itemIdx >= 0 && columns[itemIdx] ? columns[itemIdx].trim() : '',
+                                OriginalList: originalListIdx >= 0 && columns[originalListIdx] ? columns[originalListIdx].trim() : '',
                                 ListNumber: listNumIdx >= 0 && columns[listNumIdx] ? columns[listNumIdx].trim() : ''
                             });
                         }
@@ -665,28 +672,20 @@
                 responseErrorMsg.classList.add("hidden");
                 
                 const currentItem = sentenceData[currentSentenceIndex];
-                const responseTime = new Date() - currentTrialStartTime;
                 
-                // Record the response with comprehensive data - matching PCIbex format
+                // Record ONLY the essential data you specified
                 experimentResults.push({
                     participant_id: participantId,
-                    session_start_time: sessionStartTime.toISOString(),
-                    trial_number: currentSentenceIndex + 1,
-                    item_id: currentItem.Code,
-                    condition: currentItem.Cloze,
-                    region_placement: currentItem.RegionPlacement,
-                    item_number: currentItem.Item,
-                    list_number: currentItem.ListNumber,
-                    selected_list: selectedList,
+                    word: response.trim().toLowerCase(),
                     sentence: currentItem.Sentence,
-                    response: response.trim().toLowerCase(),
-                    response_time_ms: responseTime,
-                    timestamp: new Date().toISOString(),
-                    word_usage_count: wordCounter[response.trim().toLowerCase()] || 0,
-                    total_unique_words: Object.keys(wordCounter).length,
-                    browser: navigator.userAgent,
-                    screen_width: window.screen.width,
-                    screen_height: window.screen.height
+                    Code: currentItem.Code,
+                    OriginalID: currentItem.OriginalID || '',
+                    Item: currentItem.Item || '',
+                    Cloze: currentItem.Cloze || '',
+                    RegionPlacement: currentItem.RegionPlacement || '',
+                    OriginalList: currentItem.OriginalList || '',
+                    ListNumber: currentItem.ListNumber || '',
+                    selected_list: selectedList
                 });
                 
                 // Move to next sentence
@@ -762,8 +761,7 @@
                 Total time: ${Math.floor(totalTime/60)}:${(totalTime%60).toString().padStart(2,'0')}<br>
                 Unique words used: ${Object.keys(wordCounter).length}<br>
                 Total responses: ${totalResponses}<br>
-                Most frequent word: "${maxWord}" (${maxCount} times)<br>
-                Average response time: ${Math.round(experimentResults.reduce((sum, r) => sum + r.response_time_ms, 0) / experimentResults.length)}ms
+                Most frequent word: "${maxWord}" (${maxCount} times)
             `;
             
             finalScreen.classList.remove("hidden");
@@ -784,11 +782,11 @@
                 const url = URL.createObjectURL(blob);
                 const downloadLink = document.createElement('a');
                 downloadLink.href = url;
-                downloadLink.download = `cloze_results_${participantId}_${selectedList.replace('.csv', '')}_backup.json`;
+                downloadLink.download = `cloze_results_${participantId}_${selectedList.replace('.csv', '')}.json`;
                 downloadLink.id = 'downloadLink';
                 downloadLink.textContent = '📥 Download Backup Data';
                 
-                // Try to submit to the server
+                // Try to submit to the server with only essential data
                 const response = await fetch(RESULTS_ENDPOINT, {
                     method: 'POST',
                     headers: {
@@ -797,17 +795,7 @@
                     body: JSON.stringify({
                         participant_id: participantId,
                         selected_list: selectedList,
-                        session_start: sessionStartTime.toISOString(),
-                        session_end: new Date().toISOString(),
-                        total_trials: experimentResults.length,
-                        results: experimentResults,
-                        word_frequencies: wordCounter,
-                        browser_info: {
-                            user_agent: navigator.userAgent,
-                            screen_width: window.screen.width,
-                            screen_height: window.screen.height,
-                            language: navigator.language
-                        }
+                        results: experimentResults
                     })
                 });
                 
@@ -848,7 +836,7 @@
                 const url = URL.createObjectURL(blob);
                 const downloadLink = document.createElement('a');
                 downloadLink.href = url;
-                downloadLink.download = `cloze_results_${participantId}_${selectedList.replace('.csv', '')}_backup.json`;
+                downloadLink.download = `cloze_results_${participantId}_${selectedList.replace('.csv', '')}.json`;
                 downloadLink.id = 'downloadLink';
                 downloadLink.textContent = '📥 Download Your Response Data';
                 
@@ -856,9 +844,6 @@
                 document.getElementById('finalScreen').insertBefore(downloadLink, completionText);
                 
                 completionText.textContent = "Please download your data and contact the researcher to ensure your participation is recorded.";
-                
-                // Log results to console for debugging
-                console.log('Results backup:', experimentResults);
             }
         }
         
