@@ -6,28 +6,45 @@
     <title>Cloze Norming Study</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
-            text-align: center;
-        }
-        
-        h1, h2, h3 {
-            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         
         .container {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
         }
         
-        #experimentArea, #instructionsArea, #finalScreen {
-            display: none;
+        h1, h2, h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+        
+        h1 { font-size: 2.2rem; }
+        h2 { font-size: 1.8rem; }
+        
+        .instructions {
+            text-align: left;
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
         }
         
         .input-area {
@@ -35,65 +52,123 @@
         }
         
         input[type="text"] {
-            padding: 10px;
+            padding: 12px 16px;
             font-size: 16px;
-            width: 300px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
         
         button {
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
+            padding: 12px 30px;
+            border-radius: 25px;
             font-size: 16px;
-            margin: 10px 5px;
+            font-weight: 600;
             cursor: pointer;
-            border-radius: 4px;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
         
         button:hover {
-            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .error-msg {
-            color: red;
-            font-weight: bold;
-            margin: 10px 0;
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
             display: none;
         }
         
         .progress {
             margin: 20px 0;
-            font-size: 14px;
-            color: #666;
+            font-size: 16px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+        
+        .sentence-display {
+            font-size: 1.4rem;
+            font-weight: 500;
+            background: #f7fafc;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border: 2px solid #e2e8f0;
+            color: #2d3748;
         }
         
         #downloadLink {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #2196F3;
+            margin: 20px 10px;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
         }
         
         #downloadLink:hover {
-            background-color: #0b7dda;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+        }
+        
+        .success-message {
+            color: #38a169;
+            background: #c6f6d5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 600;
         }
         
         .loading-spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+            border-top: 4px solid #667eea;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
@@ -103,10 +178,24 @@
             100% { transform: rotate(360deg); }
         }
         
-        #loadingStatus {
-            margin-top: 15px;
-            font-style: italic;
-            color: #666;
+        .stats-box {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .hidden { display: none; }
+        .visible { display: block; }
+        
+        .error-display {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
         }
     </style>
 </head>
@@ -117,36 +206,47 @@
         <p>In this experiment, you will read sentences and guess the word that comes next.</p>
         
         <div class="input-area">
-            <label for="participantId">Please enter your ID:</label><br>
+            <label for="participantId">Please enter your ID:</label><br><br>
             <input type="text" id="participantId" placeholder="Your ID">
         </div>
         
-        <div id="loadingArea" style="display: none;">
+        <div id="loadingArea" class="hidden">
             <p>Loading experiment resources...</p>
             <div class="loading-spinner"></div>
-            <div id="loadingStatus"></div>
+            <div id="loadingStatus">Preparing experiment...</div>
+        </div>
+        
+        <div id="errorDisplay" class="error-display hidden">
+            <strong>Error loading experiment files:</strong>
+            <div id="errorMessage"></div>
+            <p><small>Make sure your CSV files (List1.csv through List9.csv and wordbank.csv) are in the same directory as this HTML file.</small></p>
         </div>
         
         <button id="startButton">Begin Experiment</button>
     </div>
     
     <!-- Instructions Screen -->
-    <div id="instructionsArea" class="container">
+    <div id="instructionsArea" class="container hidden">
         <h2>Instructions</h2>
-        <p>In this experiment, you will:</p>
-        <ul style="text-align: left; display: inline-block;">
-            <li>Read partial sentences with a blank at the end</li>
-            <li>Type the word you think most likely completes the sentence</li>
-            <li>Your answer must be from our word list</li>
-            <li>Submit your answer using the Submit button</li>
-        </ul>
-        <p><b>Important Rules</b>:</p>
-        <ul style="text-align: left; display: inline-block;">
-            <li>Please enter only single words (no phrases)</li>
-            <li>Do not use punctuation or numbers</li>
-            <li>Make sure your spelling is correct</li>
-            <li>Do not overuse the same word (max 22 times)</li>
-        </ul>
+        
+        <div class="instructions">
+            <p><strong>In this experiment, you will:</strong></p>
+            <ul>
+                <li>Read partial sentences with a blank at the end</li>
+                <li>Type the word you think most likely completes the sentence</li>
+                <li>Your answer must be a valid English word from our wordbank</li>
+                <li>Submit your answer using the Submit button</li>
+            </ul>
+            
+            <p><strong>Important Rules:</strong></p>
+            <ul>
+                <li>Please enter only single words (no phrases)</li>
+                <li>Do not use punctuation or numbers</li>
+                <li>Make sure your spelling is correct</li>
+                <li>Do not overuse the same word (max 22 times)</li>
+            </ul>
+        </div>
+        
         <p>Keep in mind that you may not be guessing the last word of the sentence.</p>
         <p>Let's try a practice example first.</p>
         
@@ -154,9 +254,9 @@
     </div>
     
     <!-- Practice Area -->
-    <div id="practiceArea" class="container" style="display: none;">
+    <div id="practiceArea" class="container hidden">
         <h2>Practice Trial</h2>
-        <p>The Atlantic Ocean is very ___</p>
+        <div class="sentence-display">The Atlantic Ocean is very ___</div>
         
         <div class="input-area">
             <input type="text" id="practiceInput" placeholder="Type your answer here">
@@ -168,13 +268,18 @@
     </div>
     
     <!-- Experiment Area -->
-    <div id="experimentArea" class="container">
-        <h2>Experiment</h2>
+    <div id="experimentArea" class="container hidden">
+        <h2>Main Experiment</h2>
+        
         <div class="progress">
-            <span id="progressText">Question 1 of 216</span>
+            <span id="progressText">Question 1 of ...</span>
         </div>
         
-        <p id="sentenceText">Loading sentences...</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        
+        <div class="sentence-display" id="sentenceText">Loading sentences...</div>
         
         <div class="input-area">
             <input type="text" id="responseInput" placeholder="Type your answer here">
@@ -186,17 +291,20 @@
     </div>
     
     <!-- Final Screen -->
-    <div id="finalScreen" class="container">
+    <div id="finalScreen" class="container hidden">
         <h2>Thank you for participating!</h2>
-        <p>The experiment is now complete.</p>
-        <div id="wordStats"></div>
-        <p>Your data has been recorded.</p>
-        <a id="downloadLink" href="#" download="results.csv">Download Results</a>
-        <p><a id="prolificLink" href="https://app.prolific.com/submissions/complete?cc=C4A8KZK5">Click here to validate your participation on Prolific</a></p>
+        <div class="success-message">
+            The experiment is now complete!
+        </div>
+        <div id="wordStats" class="stats-box"></div>
+        <p>Your data has been recorded and is ready for download.</p>
+        <a id="downloadLink" href="#" download="results.csv">📥 Download Results CSV</a>
+        <button onclick="restartExperiment()">🔄 Start Over</button>
+        <p><a href="https://app.prolific.com/submissions/complete?cc=C4A8KZK5" target="_blank">Click here to validate your participation on Prolific</a></p>
     </div>
 
     <script>
-        // Configuration - these exactly match your list file names
+        // Configuration - exactly matching your PCIbex setup
         const csvFiles = ["List1.csv", "List2.csv", "List3.csv", "List4.csv", "List5.csv", "List6.csv", "List7.csv", "List8.csv", "List9.csv"];
         const wordBankFile = "wordbank.csv";
         
@@ -209,11 +317,16 @@
         let wordBank = new Set();
         let wordCounter = {};
         let errorMessage = "";
+        let startTime = null;
+        let currentTrialStartTime = null;
+        let sessionStartTime = null;
         
         // DOM Elements
         const welcomeArea = document.getElementById("welcomeArea");
         const loadingArea = document.getElementById("loadingArea");
         const loadingStatus = document.getElementById("loadingStatus");
+        const errorDisplay = document.getElementById("errorDisplay");
+        const errorMessage_elem = document.getElementById("errorMessage");
         const instructionsArea = document.getElementById("instructionsArea");
         const practiceArea = document.getElementById("practiceArea");
         const experimentArea = document.getElementById("experimentArea");
@@ -230,6 +343,7 @@
         const submitButton = document.getElementById("submitButton");
         const responseErrorMsg = document.getElementById("responseErrorMsg");
         const progressText = document.getElementById("progressText");
+        const progressFill = document.getElementById("progressFill");
         const downloadLink = document.getElementById("downloadLink");
         const wordStats = document.getElementById("wordStats");
         
@@ -239,6 +353,19 @@
         practiceSubmit.addEventListener("click", submitPractice);
         submitButton.addEventListener("click", submitResponse);
         downloadLink.addEventListener("click", generateCSV);
+        
+        // Enter key support
+        document.getElementById("participantId").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") startExperiment();
+        });
+        
+        practiceInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") submitPractice();
+        });
+        
+        responseInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") submitResponse();
+        });
         
         // Functions
         async function startExperiment() {
@@ -250,12 +377,14 @@
             }
             
             // Show loading screen
-            welcomeArea.style.display = "none";
-            loadingArea.style.display = "block";
+            welcomeArea.classList.add("hidden");
+            loadingArea.classList.remove("hidden");
+            errorDisplay.classList.add("hidden");
             
             try {
                 // Select a random list
                 selectedList = csvFiles[Math.floor(Math.random() * csvFiles.length)];
+                console.log("Selected list:", selectedList);
                 
                 // Load wordbank
                 loadingStatus.textContent = "Loading word bank...";
@@ -266,11 +395,16 @@
                 await loadSentenceData(selectedList);
                 
                 // Move to instructions
-                loadingArea.style.display = "none";
-                instructionsArea.style.display = "block";
+                loadingArea.classList.add("hidden");
+                instructionsArea.classList.remove("hidden");
+                
+                sessionStartTime = new Date();
+                
             } catch (error) {
                 console.error("Error loading experiment data:", error);
-                loadingStatus.textContent = "Error loading data: " + error.message;
+                loadingArea.classList.add("hidden");
+                errorDisplay.classList.remove("hidden");
+                errorMessage_elem.textContent = error.message;
             }
         }
         
@@ -278,11 +412,15 @@
             try {
                 const response = await fetch(wordBankFile);
                 if (!response.ok) {
-                    throw new Error(`Failed to load wordbank: ${response.status}`);
+                    throw new Error(`Failed to load wordbank: ${response.status} - ${response.statusText}`);
                 }
                 
                 const data = await response.text();
                 const lines = data.split('\n');
+                
+                if (lines.length < 2) {
+                    throw new Error("Wordbank file appears to be empty or malformed");
+                }
                 
                 // Determine which column contains the words
                 const header = lines[0].toLowerCase();
@@ -296,7 +434,7 @@
                 // Process each line (skip header)
                 for (let i = 1; i < lines.length; i++) {
                     if (lines[i].trim()) {
-                        const columns = lines[i].split(',');
+                        const columns = parseCSVLine(lines[i]);
                         if (columns.length > columnIndex) {
                             const word = columns[columnIndex].trim().toLowerCase();
                             if (word) {
@@ -307,6 +445,10 @@
                 }
                 
                 console.log(`Loaded ${wordBank.size} words into wordbank`);
+                if (wordBank.size === 0) {
+                    throw new Error("No words found in wordbank file");
+                }
+                
                 return true;
             } catch (error) {
                 console.error("Error loading wordbank:", error);
@@ -318,33 +460,47 @@
             try {
                 const response = await fetch(listFile);
                 if (!response.ok) {
-                    throw new Error(`Failed to load sentence data: ${response.status}`);
+                    throw new Error(`Failed to load sentence data: ${response.status} - ${response.statusText}`);
                 }
                 
                 const data = await response.text();
                 const lines = data.split('\n');
                 
-                // Parse headers
-                const headers = lines[0].split(',');
+                if (lines.length < 2) {
+                    throw new Error("Sentence file appears to be empty or malformed");
+                }
                 
-                // Find column indexes - uses exact names from your specification
+                // Parse headers - matching your CSV structure
+                const headers = parseCSVLine(lines[0]);
+                console.log("Headers found:", headers);
+                
+                // Find column indexes
                 const sentenceIdx = headers.findIndex(h => h.trim() === 'Sentence');
-                const codeIdx = headers.findIndex(h => h.trim() === 'code');
+                const codeIdx = headers.findIndex(h => h.trim() === 'Code');
                 const clozeIdx = headers.findIndex(h => h.trim() === 'Cloze');
-                const regionIdx = headers.findIndex(h => h.trim() === 'regionplacement');
+                const regionIdx = headers.findIndex(h => h.trim() === 'RegionPlacement');
+                const itemIdx = headers.findIndex(h => h.trim() === 'Item');
+                const listNumIdx = headers.findIndex(h => h.trim() === 'ListNumber');
+                
+                console.log("Column indexes:", {sentenceIdx, codeIdx, clozeIdx, regionIdx, itemIdx, listNumIdx});
+                
+                if (sentenceIdx === -1 || codeIdx === -1) {
+                    throw new Error("Required columns (Sentence, Code) not found in CSV");
+                }
                 
                 // Parse sentences (skip header)
                 for (let i = 1; i < lines.length; i++) {
                     if (lines[i].trim()) {
-                        // Handle CSV parsing properly (respecting quotes)
-                        let columns = parseCSVLine(lines[i]);
+                        const columns = parseCSVLine(lines[i]);
                         
-                        if (columns.length > Math.max(sentenceIdx, codeIdx, clozeIdx, regionIdx)) {
+                        if (columns.length > Math.max(sentenceIdx, codeIdx)) {
                             sentenceData.push({
-                                Sentence: columns[sentenceIdx].trim(),
-                                code: columns[codeIdx].trim(),
-                                Cloze: columns[clozeIdx].trim(),
-                                regionplacement: columns[regionIdx].trim()
+                                Sentence: columns[sentenceIdx] ? columns[sentenceIdx].trim() : '',
+                                Code: columns[codeIdx] ? columns[codeIdx].trim() : '',
+                                Cloze: clozeIdx >= 0 && columns[clozeIdx] ? columns[clozeIdx].trim() : '',
+                                RegionPlacement: regionIdx >= 0 && columns[regionIdx] ? columns[regionIdx].trim() : '',
+                                Item: itemIdx >= 0 && columns[itemIdx] ? columns[itemIdx].trim() : '',
+                                ListNumber: listNumIdx >= 0 && columns[listNumIdx] ? columns[listNumIdx].trim() : ''
                             });
                         }
                     }
@@ -354,6 +510,10 @@
                 sentenceData = shuffleArray(sentenceData);
                 
                 console.log(`Loaded ${sentenceData.length} sentences from ${listFile}`);
+                if (sentenceData.length === 0) {
+                    throw new Error("No sentences found in the selected list file");
+                }
+                
                 return true;
             } catch (error) {
                 console.error("Error loading sentence data:", error);
@@ -386,27 +546,27 @@
         }
         
         function startPractice() {
-            instructionsArea.style.display = "none";
-            practiceArea.style.display = "block";
+            instructionsArea.classList.add("hidden");
+            practiceArea.classList.remove("hidden");
+            practiceInput.focus();
         }
         
         function submitPractice() {
             const response = practiceInput.value;
             
             if (validateResponse(response)) {
-                practiceErrorMsg.style.display = "none";
-                practiceArea.style.display = "none";
-                
-                // Start the actual experiment
+                practiceErrorMsg.classList.add("hidden");
+                practiceArea.classList.add("hidden");
                 loadExperiment();
             } else {
                 practiceErrorMsg.textContent = errorMessage;
-                practiceErrorMsg.style.display = "block";
+                practiceErrorMsg.classList.remove("hidden");
             }
         }
         
         function loadExperiment() {
-            experimentArea.style.display = "block";
+            experimentArea.classList.remove("hidden");
+            startTime = new Date();
             loadNextSentence();
         }
         
@@ -415,14 +575,19 @@
                 const currentItem = sentenceData[currentSentenceIndex];
                 sentenceText.textContent = currentItem.Sentence + " ___";
                 progressText.textContent = `Question ${currentSentenceIndex + 1} of ${sentenceData.length}`;
-                responseInput.value = "";
-                responseErrorMsg.style.display = "none";
                 
-                // Auto-focus on the input field
+                // Update progress bar
+                const progressPercent = (currentSentenceIndex / sentenceData.length) * 100;
+                progressFill.style.width = progressPercent + "%";
+                
+                responseInput.value = "";
+                responseErrorMsg.classList.add("hidden");
                 responseInput.focus();
+                
+                currentTrialStartTime = new Date();
             } else {
                 // End of experiment
-                experimentArea.style.display = "none";
+                experimentArea.classList.add("hidden");
                 showFinalScreen();
             }
         }
@@ -431,96 +596,85 @@
             const response = responseInput.value;
             
             if (validateResponse(response)) {
-                responseErrorMsg.style.display = "none";
+                responseErrorMsg.classList.add("hidden");
                 
                 const currentItem = sentenceData[currentSentenceIndex];
+                const responseTime = new Date() - currentTrialStartTime;
                 
-                // Record the response
+                // Record the response with comprehensive data - matching PCIbex format
                 experimentResults.push({
-                    participantId: participantId,
-                    regionplacement: currentItem.regionplacement,
-                    itemID: currentItem.code,
+                    participant_id: participantId,
+                    session_start_time: sessionStartTime.toISOString(),
+                    trial_number: currentSentenceIndex + 1,
+                    item_id: currentItem.Code,
                     condition: currentItem.Cloze,
-                    list: selectedList,
+                    region_placement: currentItem.RegionPlacement,
+                    item_number: currentItem.Item,
+                    list_number: currentItem.ListNumber,
+                    selected_list: selectedList,
                     sentence: currentItem.Sentence,
                     response: response.trim().toLowerCase(),
-                    timestamp: new Date().toISOString()
+                    response_time_ms: responseTime,
+                    timestamp: new Date().toISOString(),
+                    word_usage_count: wordCounter[response.trim().toLowerCase()] || 0,
+                    total_unique_words: Object.keys(wordCounter).length,
+                    browser: navigator.userAgent,
+                    screen_width: window.screen.width,
+                    screen_height: window.screen.height
                 });
-                
-                // Save results to localStorage as backup
-                saveResultsToLocalStorage();
                 
                 // Move to next sentence
                 currentSentenceIndex++;
                 loadNextSentence();
             } else {
                 responseErrorMsg.textContent = errorMessage;
-                responseErrorMsg.style.display = "block";
+                responseErrorMsg.classList.remove("hidden");
             }
         }
         
-        // Allow pressing Enter to submit response
-        responseInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                submitResponse();
-            }
-        });
-        
-        // Allow pressing Enter to submit practice
-        practiceInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                submitPractice();
-            }
-        });
-        
         function validateResponse(response) {
-            // Remove any leading/trailing spaces
             const word = response.trim().toLowerCase();
             
-            // Check for blank or whitespace-only inputs
             if (!word || word === "") {
-                errorMessage = "Warning! You cannot submit a blank response or spaces. Please enter a word.";
+                errorMessage = "Warning! You cannot submit a blank response. Please enter a word.";
                 return false;
             }
             
-            // Check for multiple words (spaces)
             if (/\s/.test(word)) {
                 errorMessage = "Warning! Illegal input. Please enter a single word only (no spaces).";
                 return false;
             }
             
-            // Check for numbers
             if (/\d/.test(word)) {
                 errorMessage = "Warning! Illegal characters input. Please enter a word without numbers.";
                 return false;
             }
             
-            // Check for punctuation or special characters
             if (/[^\w]|_/.test(word)) {
                 errorMessage = "Warning! Illegal characters input. Please enter a word without punctuation or special characters.";
                 return false;
             }
             
-            // Check if word exists in wordbank
             if (!wordBank.has(word)) {
                 errorMessage = "Warning! Word not recognized. Please make sure the word is spelled correctly.";
                 return false;
             }
             
-            // Check if word has been used too many times (>22)
             wordCounter[word] = (wordCounter[word] || 0) + 1;
             if (wordCounter[word] > 22) {
                 errorMessage = "Answer has been used too frequently. Please input a different answer. You may not be paid if you are getting this message as we have suspicion that you are overusing a word as an answer.";
-                wordCounter[word]--; // Decrement since we're not accepting this usage
+                wordCounter[word]--;
                 return false;
             }
             
-            // All checks passed
             return true;
         }
         
         function showFinalScreen() {
-            // Find the most frequently used word
+            const endTime = new Date();
+            const totalTime = Math.round((endTime - sessionStartTime) / 1000);
+            
+            // Calculate statistics
             let maxWord = "";
             let maxCount = 0;
             let totalResponses = 0;
@@ -533,60 +687,88 @@
                 }
             }
             
-            // Display word usage statistics
-            wordStats.innerHTML = `<p><small>Words used: ${Object.keys(wordCounter).length} unique words in ${totalResponses} responses<br>
-            Most frequent: "${maxWord}" (${maxCount} times)</small></p>`;
+            // Display statistics
+            wordStats.innerHTML = `
+                <strong>Experiment Statistics:</strong><br>
+                Selected list: ${selectedList}<br>
+                Total time: ${Math.floor(totalTime/60)}:${(totalTime%60).toString().padStart(2,'0')}<br>
+                Unique words used: ${Object.keys(wordCounter).length}<br>
+                Total responses: ${totalResponses}<br>
+                Most frequent word: "${maxWord}" (${maxCount} times)<br>
+                Average response time: ${Math.round(experimentResults.reduce((sum, r) => sum + r.response_time_ms, 0) / experimentResults.length)}ms
+            `;
             
-            // Show final screen
-            finalScreen.style.display = "block";
+            finalScreen.classList.remove("hidden");
         }
         
-        function saveResultsToLocalStorage() {
-            try {
-                localStorage.setItem(`cloze_results_${participantId}`, JSON.stringify(experimentResults));
-            } catch (e) {
-                console.warn("Could not save to localStorage:", e);
-            }
-        }
-        
-        function generateCSV(event) {
+        function generateCSV() {
             if (experimentResults.length === 0) {
                 alert("No data to download.");
-                event.preventDefault();
                 return;
             }
             
-            // Create CSV content
+            // Create comprehensive CSV with all experimental data
+            const headers = [
+                "participant_id", "session_start_time", "trial_number", "item_id", 
+                "condition", "region_placement", "item_number", "list_number", "selected_list",
+                "sentence", "response", "response_time_ms", "timestamp", 
+                "word_usage_count", "total_unique_words", "browser", "screen_width", "screen_height"
+            ];
+            
             let csvContent = "data:text/csv;charset=utf-8,";
             
-            // Add headers
-            csvContent += "participant_id,regionplacement,item_id,condition,list,sentence,response,timestamp\n";
+            // Add header with metadata (similar to PCIbex format)
+            csvContent += `# Results from Cloze Norming Study\n`;
+            csvContent += `# Generated on ${new Date().toUTCString()}\n`;
+            csvContent += `# Participant: ${participantId}\n`;
+            csvContent += `# Selected List: ${selectedList}\n`;
+            csvContent += `# Total Trials: ${experimentResults.length}\n`;
+            csvContent += `# User Agent: ${navigator.userAgent}\n#\n`;
+            
+            // Add column headers
+            csvContent += headers.join(",") + "\n";
             
             // Add data rows
             experimentResults.forEach(result => {
-                const row = [
-                    result.participantId,
-                    result.regionplacement,
-                    result.itemID,
-                    result.condition,
-                    result.list,
-                    `"${result.sentence.replace(/"/g, '""')}"`, // Escape quotes for CSV
-                    result.response,
-                    result.timestamp
-                ].join(",");
-                csvContent += row + "\n";
+                const row = headers.map(header => {
+                    let value = result[header];
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                        value = `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value;
+                });
+                csvContent += row.join(",") + "\n";
             });
             
-            // Create download link
+            // Add summary statistics
+            csvContent += "\n# SUMMARY STATISTICS\n";
+            csvContent += `# Total Trials,${experimentResults.length}\n`;
+            csvContent += `# Unique Words Used,${Object.keys(wordCounter).length}\n`;
+            csvContent += `# Total Experiment Duration (seconds),${Math.round((new Date(experimentResults[experimentResults.length-1].timestamp) - sessionStartTime) / 1000)}\n`;
+            csvContent += `# Average Response Time (ms),${Math.round(experimentResults.reduce((sum, r) => sum + r.response_time_ms, 0) / experimentResults.length)}\n`;
+            
+            // Word frequency data
+            csvContent += "\n# WORD FREQUENCIES\n";
+            csvContent += "# Word,Count\n";
+            Object.entries(wordCounter)
+                .sort(([,a], [,b]) => b - a)
+                .forEach(([word, count]) => {
+                    csvContent += `# ${word},${count}\n`;
+                });
+            
             const encodedUri = encodeURI(csvContent);
             downloadLink.href = encodedUri;
-            downloadLink.download = `cloze_results_${participantId}_${new Date().toISOString().slice(0,10)}.csv`;
+            downloadLink.download = `cloze_results_${participantId}_${selectedList}_${new Date().toISOString().slice(0,10)}.csv`;
         }
         
-        // Utility functions
+        function restartExperiment() {
+            if (confirm("Are you sure you want to restart? All progress will be lost.")) {
+                location.reload();
+            }
+        }
+        
         function shuffleArray(array) {
-            // Fisher-Yates shuffle algorithm
-            const newArray = [...array]; // Create a copy to avoid modifying the original
+            const newArray = [...array];
             for (let i = newArray.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
@@ -594,38 +776,8 @@
             return newArray;
         }
         
-        // Check if there are saved results in localStorage (e.g., if browser was closed)
-        window.addEventListener('load', function() {
-            // Check for session recovery
-            const urlParams = new URLSearchParams(window.location.search);
-            const recoveryId = urlParams.get('recover');
-            
-            if (recoveryId) {
-                try {
-                    const savedResults = localStorage.getItem(`cloze_results_${recoveryId}`);
-                    if (savedResults) {
-                        const shouldRecover = confirm("We found a previous session for this ID. Would you like to continue where you left off?");
-                        if (shouldRecover) {
-                            participantId = recoveryId;
-                            document.getElementById("participantId").value = recoveryId;
-                            experimentResults = JSON.parse(savedResults);
-                            currentSentenceIndex = experimentResults.length;
-                            
-                            // Count words used so far
-                            experimentResults.forEach(result => {
-                                const word = result.response.toLowerCase();
-                                wordCounter[word] = (wordCounter[word] || 0) + 1;
-                            });
-                            
-                            // Continue experiment
-                            startExperiment();
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Could not recover session:", e);
-                }
-            }
-        });
+        // Initialize
+        document.getElementById("participantId").focus();
     </script>
 </body>
 </html>
