@@ -318,12 +318,15 @@
     <!-- Final Screen -->
     <div id="finalScreen" class="container hidden">
         <h2>Thank you for participating!</h2>
-        <div class="success-message">
+        <div class="success-message" id="successMessage">
             The experiment is now complete!
         </div>
+        <div id="submissionStatus" class="hidden">
+            <div class="loading-spinner"></div>
+            <p>Submitting your responses...</p>
+        </div>
         <div id="wordStats" class="stats-box"></div>
-        <p>Your data has been recorded and is ready for download.</p>
-        <a id="downloadLink" href="#" download="results.csv">📥 Download Results CSV</a>
+        <p id="completionText">Your responses have been recorded. Thank you for your participation!</p>
         <button onclick="restartExperiment()">🔄 Start Over</button>
         <p><a href="https://app.prolific.com/submissions/complete?cc=C4A8KZK5" target="_blank">Click here to validate your participation on Prolific</a></p>
     </div>
@@ -332,6 +335,7 @@
         // Configuration - exactly matching your PCIbex setup
         const csvFiles = ["List1.csv", "List2.csv", "List3.csv", "List4.csv", "List5.csv", "List6.csv", "List7.csv", "List8.csv", "List9.csv"];
         const wordBankFile = "wordbank.csv";
+        const RESULTS_ENDPOINT = "submit_results.php"; // Change this to your server endpoint
         
         // Variables to store experiment state
         let currentSentenceIndex = 0;
@@ -371,8 +375,10 @@
         const responseErrorMsg = document.getElementById("responseErrorMsg");
         const progressText = document.getElementById("progressText");
         const progressFill = document.getElementById("progressFill");
-        const downloadLink = document.getElementById("downloadLink");
         const wordStats = document.getElementById("wordStats");
+        const submissionStatus = document.getElementById("submissionStatus");
+        const successMessage = document.getElementById("successMessage");
+        const completionText = document.getElementById("completionText");
         
         // Event Listeners
         startButton.addEventListener("click", startExperiment);
@@ -380,7 +386,6 @@
         practiceSubmit.addEventListener("click", submitPractice);
         beginExperimentButton.addEventListener("click", loadExperiment);
         submitButton.addEventListener("click", submitResponse);
-        downloadLink.addEventListener("click", generateCSV);
         
         // Enter key support
         document.getElementById("participantId").addEventListener("keydown", function(e) {
@@ -711,66 +716,73 @@
             `;
             
             finalScreen.classList.remove("hidden");
+            
+            // Automatically submit results to server
+            submitResultsToServer();
         }
         
-        function generateCSV() {
-            if (experimentResults.length === 0) {
-                alert("No data to download.");
-                return;
+        async function submitResultsToServer() {
+            // Show submission status
+            submissionStatus.classList.remove("hidden");
+            successMessage.classList.add("hidden");
+            
+            try {
+                const response = await fetch(RESULTS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        participant_id: participantId,
+                        selected_list: selectedList,
+                        session_start: sessionStartTime.toISOString(),
+                        session_end: new Date().toISOString(),
+                        total_trials: experimentResults.length,
+                        results: experimentResults,
+                        word_frequencies: wordCounter,
+                        browser_info: {
+                            user_agent: navigator.userAgent,
+                            screen_width: window.screen.width,
+                            screen_height: window.screen.height,
+                            language: navigator.language
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Success - hide loading, show success
+                    submissionStatus.classList.add("hidden");
+                    successMessage.classList.remove("hidden");
+                    successMessage.innerHTML = `
+                        <div class="success-message">
+                            ✅ Your responses have been successfully recorded!<br>
+                            <small>Submission ID: ${result.submission_id || 'Confirmed'}</small>
+                        </div>
+                    `;
+                    completionText.textContent = "Thank you for your participation in our research!";
+                } else {
+                    throw new Error(result.message || 'Server error');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting results:', error);
+                
+                // Show error and fallback option
+                submissionStatus.classList.add("hidden");
+                successMessage.innerHTML = `
+                    <div class="error-display">
+                        ⚠️ There was an issue submitting your results automatically.<br>
+                        Please contact the researcher with your participant ID: <strong>${participantId}</strong>
+                    </div>
+                `;
+                successMessage.classList.remove("hidden");
+                completionText.textContent = "Please contact the researcher to ensure your data was recorded.";
+                
+                // Optionally provide manual backup
+                console.log('Results backup:', experimentResults);
             }
-            
-            // Create comprehensive CSV with all experimental data
-            const headers = [
-                "participant_id", "session_start_time", "trial_number", "item_id", 
-                "condition", "region_placement", "item_number", "list_number", "selected_list",
-                "sentence", "response", "response_time_ms", "timestamp", 
-                "word_usage_count", "total_unique_words", "browser", "screen_width", "screen_height"
-            ];
-            
-            let csvContent = "data:text/csv;charset=utf-8,";
-            
-            // Add header with metadata (similar to PCIbex format)
-            csvContent += `# Results from Cloze Norming Study\n`;
-            csvContent += `# Generated on ${new Date().toUTCString()}\n`;
-            csvContent += `# Participant: ${participantId}\n`;
-            csvContent += `# Selected List: ${selectedList}\n`;
-            csvContent += `# Total Trials: ${experimentResults.length}\n`;
-            csvContent += `# User Agent: ${navigator.userAgent}\n#\n`;
-            
-            // Add column headers
-            csvContent += headers.join(",") + "\n";
-            
-            // Add data rows
-            experimentResults.forEach(result => {
-                const row = headers.map(header => {
-                    let value = result[header];
-                    if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-                        value = `"${value.replace(/"/g, '""')}"`;
-                    }
-                    return value;
-                });
-                csvContent += row.join(",") + "\n";
-            });
-            
-            // Add summary statistics
-            csvContent += "\n# SUMMARY STATISTICS\n";
-            csvContent += `# Total Trials,${experimentResults.length}\n`;
-            csvContent += `# Unique Words Used,${Object.keys(wordCounter).length}\n`;
-            csvContent += `# Total Experiment Duration (seconds),${Math.round((new Date(experimentResults[experimentResults.length-1].timestamp) - sessionStartTime) / 1000)}\n`;
-            csvContent += `# Average Response Time (ms),${Math.round(experimentResults.reduce((sum, r) => sum + r.response_time_ms, 0) / experimentResults.length)}\n`;
-            
-            // Word frequency data
-            csvContent += "\n# WORD FREQUENCIES\n";
-            csvContent += "# Word,Count\n";
-            Object.entries(wordCounter)
-                .sort(([,a], [,b]) => b - a)
-                .forEach(([word, count]) => {
-                    csvContent += `# ${word},${count}\n`;
-                });
-            
-            const encodedUri = encodeURI(csvContent);
-            downloadLink.href = encodedUri;
-            downloadLink.download = `cloze_results_${participantId}_${selectedList}_${new Date().toISOString().slice(0,10)}.csv`;
         }
         
         function restartExperiment() {
