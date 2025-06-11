@@ -1,0 +1,33 @@
+{
+  "name": "cloze-norming-study",
+  "version": "1.0.0",
+  "description": "Cloze completion experiment web application",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@vercel/blob": "^0.15.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "your-github-repo-url"
+  },
+  "keywords": [
+    "experiment",
+    "psychology",
+    "cloze",
+    "linguistics",
+    "research"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
