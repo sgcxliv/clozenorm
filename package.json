@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A web-based experiment for cloze norming studies",
   "main": "index.html",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
