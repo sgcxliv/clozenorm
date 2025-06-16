@@ -1,9 +1,5 @@
 import { put } from '@vercel/blob';
 
-export const config = {
-  runtime: 'edge'
-};
-
 export default async function handler(req) {
   // Set CORS headers for all responses
   const headers = {
