@@ -1,6 +1,8 @@
 import { put } from '@vercel/blob';
 
 export default async function handler(req) {
+  console.time('total-execution');
+  
   // Set CORS headers for all responses
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -30,10 +32,14 @@ export default async function handler(req) {
   }
 
   try {
+    console.time('json-parse');
     const data = await req.json();
+    console.timeEnd('json-parse');
+    console.log(`Data size: ${JSON.stringify(data).length} characters, ${data.results.length} results`);
     
     // Validate required data
     if (!data.participant_id || !data.results || !Array.isArray(data.results)) {
+      console.timeEnd('total-execution');
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -49,15 +55,22 @@ export default async function handler(req) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `cloze_results_${timestamp}_${data.participant_id}_${data.selected_list || 'unknown'}.csv`;
     
-    // Convert to CSV format - only including the essential fields
+    // Convert to CSV format 
+    console.time('csv-format');
     const csvContent = formatDataAsCSV(data);
+    console.timeEnd('csv-format');
+    console.log(`CSV size: ${csvContent.length} characters`);
     
     // Store in Vercel Blob Storage
+    console.time('blob-upload');
     const blob = await put(filename, csvContent, {
       access: 'public', // Public for easier debugging/access
       contentType: 'text/csv'
     });
+    console.timeEnd('blob-upload');
+    console.log(`Blob URL: ${blob.url}`);
 
+    console.timeEnd('total-execution');
     // Return success response
     return new Response(
       JSON.stringify({ 
@@ -75,12 +88,14 @@ export default async function handler(req) {
 
   } catch (error) {
     console.error('Error saving results:', error);
+    console.timeEnd('total-execution');
     
     return new Response(
       JSON.stringify({ 
         success: false, 
         message: 'Failed to save results to server',
-        error: error.message
+        error: error.message,
+        stack: error.stack // Including stack trace for debugging
       }), 
       { 
         status: 500, 
