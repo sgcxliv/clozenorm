@@ -11,5 +11,5 @@
       "runtime": "@vercel/node@2.15.10",
       "memory": 1024
     }
-  },
+  }
 }
