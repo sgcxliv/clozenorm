@@ -1,61 +1,46 @@
 import { put } from '@vercel/blob';
 
-export default async function handler(req) {
+// Change your function signature to use Node.js style request/response
+export default async function handler(req, res) {
   console.time('total-execution');
   
-  // Set CORS headers for all responses
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
-  };
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   // Handle preflight request
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      status: 200, 
-      headers 
-    });
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Method not allowed. Use POST.' 
-      }), 
-      { 
-        status: 405, 
-        headers: { ...headers, 'Content-Type': 'application/json' } 
-      }
-    );
+    return res.status(405).json({ 
+      success: false, 
+      message: 'Method not allowed. Use POST.' 
+    });
   }
 
   try {
     console.time('json-parse');
-    const data = await req.json();
+    // Use req.body instead of req.json()
+    const data = req.body;
     console.timeEnd('json-parse');
     console.log(`Data size: ${JSON.stringify(data).length} characters, ${data.results.length} results`);
     
     // Validate required data
     if (!data.participant_id || !data.results || !Array.isArray(data.results)) {
       console.timeEnd('total-execution');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Missing required data: participant_id and results array' 
-        }), 
-        { 
-          status: 400, 
-          headers: { ...headers, 'Content-Type': 'application/json' } 
-        }
-      );
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required data: participant_id and results array'
+      });
     }
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `cloze_results_${timestamp}_${data.participant_id}_${data.selected_list || 'unknown'}.csv`;
     
-    // Convert to CSV format 
+    // Convert to CSV format - only including the essential fields
     console.time('csv-format');
     const csvContent = formatDataAsCSV(data);
     console.timeEnd('csv-format');
@@ -72,36 +57,24 @@ export default async function handler(req) {
 
     console.timeEnd('total-execution');
     // Return success response
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Results saved successfully',
-        submission_id: filename.replace('.csv', ''),
-        timestamp: new Date().toISOString(),
-        url: blob.url
-      }), 
-      { 
-        status: 200, 
-        headers: { ...headers, 'Content-Type': 'application/json' } 
-      }
-    );
+    return res.status(200).json({
+      success: true,
+      message: 'Results saved successfully',
+      submission_id: filename.replace('.csv', ''),
+      timestamp: new Date().toISOString(),
+      url: blob.url
+    });
 
   } catch (error) {
     console.error('Error saving results:', error);
     console.timeEnd('total-execution');
     
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Failed to save results to server',
-        error: error.message,
-        stack: error.stack // Including stack trace for debugging
-      }), 
-      { 
-        status: 500, 
-        headers: { ...headers, 'Content-Type': 'application/json' } 
-      }
-    );
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to save results to server',
+      error: error.message,
+      stack: error.stack
+    });
   }
 }
 
